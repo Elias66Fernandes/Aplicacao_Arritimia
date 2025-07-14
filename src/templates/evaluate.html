@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avaliação de Arritmia - Sistema de Detecção</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .form-control {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem;
+            transition: border-color 0.3s;
+        }
+        .form-control:focus {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+        .btn-predict {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            color: white;
+            transition: transform 0.3s;
+        }
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+        .result-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+            display: none;
+        }
+        .result-success {
+            border-left: 5px solid #28a745;
+        }
+        .result-warning {
+            border-left: 5px solid #ffc107;
+        }
+        .result-danger {
+            border-left: 5px solid #dc3545;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        .feature-section {
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background-color: #f8f9fa;
+        }
+        .feature-section h5 {
+            color: #dc3545;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .row-spacing {
+            margin-bottom: 1rem;
+        }
+        .back-btn {
+            color: #dc3545;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .back-btn:hover {
+            color: #fd7e14;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h1 class="h2 fw-bold mb-2">Avaliação de Arritmia Cardíaca</h1>
+                    <p class="mb-0">Insira os dados do ECG para análise</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <a href="/" class="back-btn">
+            <i class="bi bi-arrow-left me-2"></i>
+            Voltar ao Início
+        </a>
+
+        <div class="form-container">
+            <form id="evaluationForm">
+                <!-- Seção 1: Dados Básicos do ECG -->
+                <div class="feature-section">
+                    <h5><i class="bi bi-heart-pulse me-2"></i>Dados Básicos do ECG</h5>
+                    <div class="row row-spacing">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="QRS_duration" class="form-label">Duração QRS</label>
+                                <input type="number" step="0.01" class="form-control" id="QRS_duration" name="QRS_duration" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="QT_interval" class="form-label">Intervalo QT</label>
+                                <input type="number" step="0.01" class="form-control" id="QT_interval" name="QT_interval" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="T_interval" class="form-label">Intervalo T</label>
+                                <input type="number" step="0.01" class="form-control" id="T_interval" name="T_interval" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="heart_rate" class="form-label">Frequência Cardíaca</label>
+                                <input type="number" step="0.01" class="form-control" id="heart_rate" name="heart_rate" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 2: Medidas de Largura -->
+                <div class="feature-section">
+                    <h5><i class="bi bi-graph-up me-2"></i>Medidas de Largura</h5>
+                    <div class="row row-spacing">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="DI_R_width" class="form-label">DI R Width</label>
+                                <input type="number" step="0.01" class="form-control" id="DI_R_width" name="DI_R_width" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="DII_Num_Intrinsic_Deflections" class="form-label">DII Num Intrinsic Deflections</label>
+                                <input type="number" step="0.01" class="form-control" id="DII_Num_Intrinsic_Deflections" name="DII_Num_Intrinsic_Deflections" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="AVF_Q_width" class="form-label">AVF Q Width</label>
+                                <input type="number" step="0.01" class="form-control" id="AVF_Q_width" name="AVF_Q_width" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 3: Derivações V1-V3 -->
+                <div class="feature-section">
+                    <h5><i class="bi bi-activity me-2"></i>Derivações V1-V3</h5>
+                    <div class="row row-spacing">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V1_Q_width" class="form-label">V1 Q Width</label>
+                                <input type="number" step="0.01" class="form-control" id="V1_Q_width" name="V1_Q_width" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V1_R_prime_width" class="form-label">V1 R Prime Width</label>
+                                <input type="number" step="0.01" class="form-control" id="V1_R_prime_width" name="V1_R_prime_width" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V1_Num_Intrinsic_Deflections" class="form-label">V1 Num Intrinsic Deflections</label>
+                                <input type="number" step="0.01" class="form-control" id="V1_Num_Intrinsic_Deflections" name="V1_Num_Intrinsic_Deflections" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V2_Q_width" class="form-label">V2 Q Width</label>
+                                <input type="number" step="0.01" class="form-control" id="V2_Q_width" name="V2_Q_width" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row row-spacing">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V2_S_width" class="form-label">V2 S Width</label>
+                                <input type="number" step="0.01" class="form-control" id="V2_S_width" name="V2_S_width" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V2_R_prime_width" class="form-label">V2 R Prime Width</label>
+                                <input type="number" step="0.01" class="form-control" id="V2_R_prime_width" name="V2_R_prime_width" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V3_Q_width" class="form-label">V3 Q Width</label>
+                                <input type="number" step="0.01" class="form-control" id="V3_Q_width" name="V3_Q_width" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V3_R_width" class="form-label">V3 R Width</label>
+                                <input type="number" step="0.01" class="form-control" id="V3_R_width" name="V3_R_width" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row row-spacing">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="V3_S_width" class="form-label">V3 S Width</label>
+                                <input type="number" step="0.01" class="form-control" id="V3_S_width" name="V3_S_width" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="V3_Num_Intrinsic_Deflections" class="form-label">V3 Num Intrinsic Deflections</label>
+                                <input type="number" step="0.01" class="form-control" id="V3_Num_Intrinsic_Deflections" name="V3_Num_Intrinsic_Deflections" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="V3_Diphasic_T_Derivation" class="form-label">V3 Diphasic T Derivation</label>
+                                <input type="number" step="0.01" class="form-control" id="V3_Diphasic_T_Derivation" name="V3_Diphasic_T_Derivation" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 4: Derivações V4-V6 -->
+                <div class="feature-section">
+                    <h5><i class="bi bi-heart me-2"></i>Derivações V4-V6</h5>
+                    <div class="row row-spacing">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V4_Q_width" class="form-label">V4 Q Width</label>
+                                <input type="number" step="0.01" class="form-control" id="V4_Q_width" name="V4_Q_width" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V4_R_width" class="form-label">V4 R Width</label>
+                                <input type="number" step="0.01" class="form-control" id="V4_R_width" name="V4_R_width" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V5_R_width" class="form-label">V5 R Width</label>
+                                <input type="number" step="0.01" class="form-control" id="V5_R_width" name="V5_R_width" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V5_Num_Intrinsic_Deflections" class="form-label">V5 Num Intrinsic Deflections</label>
+                                <input type="number" step="0.01" class="form-control" id="V5_Num_Intrinsic_Deflections" name="V5_Num_Intrinsic_Deflections" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row row-spacing">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="V6_R_width" class="form-label">V6 R Width</label>
+                                <input type="number" step="0.01" class="form-control" id="V6_R_width" name="V6_R_width" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="V6_Num_Intrinsic_Deflections" class="form-label">V6 Num Intrinsic Deflections</label>
+                                <input type="number" step="0.01" class="form-control" id="V6_Num_Intrinsic_Deflections" name="V6_Num_Intrinsic_Deflections" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 5: Amplitudes DI-DIII -->
+                <div class="feature-section">
+                    <h5><i class="bi bi-bar-chart me-2"></i>Amplitudes DI-DIII</h5>
+                    <div class="row row-spacing">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="DI_JJ_amp" class="form-label">DI JJ Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="DI_JJ_amp" name="DI_JJ_amp" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="DI_S_amp" class="form-label">DI S Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="DI_S_amp" name="DI_S_amp" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="DI_T_amp" class="form-label">DI T Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="DI_T_amp" name="DI_T_amp" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="DII_Q_amp" class="form-label">DII Q Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="DII_Q_amp" name="DII_Q_amp" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row row-spacing">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="DII_T_amp" class="form-label">DII T Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="DII_T_amp" name="DII_T_amp" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="DIII_Q_amp" class="form-label">DIII Q Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="DIII_Q_amp" name="DIII_Q_amp" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 6: Amplitudes AVR-AVF -->
+                <div class="feature-section">
+                    <h5><i class="bi bi-graph-down me-2"></i>Amplitudes AVR-AVF</h5>
+                    <div class="row row-spacing">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="AVR_JJ_amp" class="form-label">AVR JJ Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="AVR_JJ_amp" name="AVR_JJ_amp" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="AVR_R_amp" class="form-label">AVR R Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="AVR_R_amp" name="AVR_R_amp" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="AVR_T_amp" class="form-label">AVR T Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="AVR_T_amp" name="AVR_T_amp" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="AVF_Q_amp" class="form-label">AVF Q Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="AVF_Q_amp" name="AVF_Q_amp" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 7: Amplitudes V1-V3 -->
+                <div class="feature-section">
+                    <h5><i class="bi bi-lightning me-2"></i>Amplitudes V1-V3</h5>
+                    <div class="row row-spacing">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V1_R_prime_amp" class="form-label">V1 R Prime Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="V1_R_prime_amp" name="V1_R_prime_amp" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V1_QRSA" class="form-label">V1 QRSA</label>
+                                <input type="number" step="0.01" class="form-control" id="V1_QRSA" name="V1_QRSA" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V2_JJ_amp" class="form-label">V2 JJ Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="V2_JJ_amp" name="V2_JJ_amp" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V2_Q_amp" class="form-label">V2 Q Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="V2_Q_amp" name="V2_Q_amp" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row row-spacing">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V2_QRSA" class="form-label">V2 QRSA</label>
+                                <input type="number" step="0.01" class="form-control" id="V2_QRSA" name="V2_QRSA" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V3_JJ_amp" class="form-label">V3 JJ Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="V3_JJ_amp" name="V3_JJ_amp" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V3_Q_amp" class="form-label">V3 Q Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="V3_Q_amp" name="V3_Q_amp" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V3_QRSA" class="form-label">V3 QRSA</label>
+                                <input type="number" step="0.01" class="form-control" id="V3_QRSA" name="V3_QRSA" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row row-spacing">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="V3_QRSTA" class="form-label">V3 QRSTA</label>
+                                <input type="number" step="0.01" class="form-control" id="V3_QRSTA" name="V3_QRSTA" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="V4_Q_amp" class="form-label">V4 Q Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="V4_Q_amp" name="V4_Q_amp" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 8: Amplitudes V5-V6 -->
+                <div class="feature-section">
+                    <h5><i class="bi bi-heart-fill me-2"></i>Amplitudes V5-V6</h5>
+                    <div class="row row-spacing">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V5_T_amp" class="form-label">V5 T Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="V5_T_amp" name="V5_T_amp" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V5_QRSTA" class="form-label">V5 QRSTA</label>
+                                <input type="number" step="0.01" class="form-control" id="V5_QRSTA" name="V5_QRSTA" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V6_JJ_amp" class="form-label">V6 JJ Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="V6_JJ_amp" name="V6_JJ_amp" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="V6_T_amp" class="form-label">V6 T Amp</label>
+                                <input type="number" step="0.01" class="form-control" id="V6_T_amp" name="V6_T_amp" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row row-spacing">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="V6_QRSA" class="form-label">V6 QRSA</label>
+                                <input type="number" step="0.01" class="form-control" id="V6_QRSA" name="V6_QRSA" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="V6_QRSTA" class="form-label">V6 QRSTA</label>
+                                <input type="number" step="0.01" class="form-control" id="V6_QRSTA" name="V6_QRSTA" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-predict btn-lg">
+                        <i class="bi bi-cpu me-2"></i>
+                        Analisar Arritmia
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner-border text-danger" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-3">Analisando dados do ECG...</p>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <h4><i class="bi bi-clipboard-data me-2"></i>Resultado da Análise</h4>
+            <div id="resultContent"></div>
+        </div>
+    </div>
+
+    <footer class="bg-light py-4 mt-5">
+        <div class="container">
+            <div class="text-center">
+                <p class="mb-0">© 2024 Sistema de Detecção de Arritmias Cardíacas. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('evaluationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {};
+            
+            // Converter FormData para objeto
+            for (let [key, value] of formData.entries()) {
+                data[key] = parseFloat(value);
+            }
+            
+            // Mostrar loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultContainer').style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                // Esconder loading
+                document.getElementById('loading').style.display = 'none';
+                
+                // Mostrar resultado
+                const resultContainer = document.getElementById('resultContainer');
+                const resultContent = document.getElementById('resultContent');
+                
+                if (response.ok) {
+                    let resultClass = 'result-success';
+                    let icon = 'bi-check-circle-fill';
+                    let title = 'Análise Concluída';
+                    
+                    if (result.prediction !== 0) {
+                        resultClass = 'result-warning';
+                        icon = 'bi-exclamation-triangle-fill';
+                        title = 'Arritmia Detectada';
+                    }
+                    
+                    resultContainer.className = 'result-container ' + resultClass;
+                    resultContent.innerHTML = `
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi ${icon} me-2 fs-4"></i>
+                            <h5 class="mb-0">${title}</h5>
+                        </div>
+                        <p><strong>Classificação:</strong> ${result.class_name}</p>
+                        <p><strong>Confiança:</strong> ${(result.confidence * 100).toFixed(2)}%</p>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <strong>Nota:</strong> Este resultado é apenas para fins educacionais e não deve ser usado para diagnóstico médico.
+                            </small>
+                        </div>
+                    `;
+                } else {
+                    resultContainer.className = 'result-container result-danger';
+                    resultContent.innerHTML = `
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-x-circle-fill me-2 fs-4"></i>
+                            <h5 class="mb-0">Erro na Análise</h5>
+                        </div>
+                        <p>${result.error || 'Ocorreu um erro durante a análise.'}</p>
+                    `;
+                }
+                
+                resultContainer.style.display = 'block';
+                resultContainer.scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                
+                const resultContainer = document.getElementById('resultContainer');
+                const resultContent = document.getElementById('resultContent');
+                
+                resultContainer.className = 'result-container result-danger';
+                resultContent.innerHTML = `
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-x-circle-fill me-2 fs-4"></i>
+                        <h5 class="mb-0">Erro de Conexão</h5>
+                    </div>
+                    <p>Não foi possível conectar ao servidor. Tente novamente.</p>
+                `;
+                
+                resultContainer.style.display = 'block';
+                resultContainer.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    </script>
+</body>
+</html>
+
