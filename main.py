@@ -1,5 +1,4 @@
 import os
-import sys
 from flask import Flask
 from src.routes.arrhythmia_simple import arrhythmia_bp
 
@@ -18,4 +17,6 @@ app = Flask(
 app.register_blueprint(arrhythmia_bp)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)

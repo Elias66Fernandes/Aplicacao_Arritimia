@@ -2,15 +2,21 @@ from flask import Blueprint, render_template, request, jsonify
 import numpy as np
 import os
 import joblib
-from sklearn.preprocessing import StandardScaler
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pasta src
-model_path = os.path.join(BASE_DIR, 'models', 'CatBoost_best_model.joblib')
-model = joblib.load(model_path)
+model_path = os.path.join(BASE_DIR, 'models', 'CatBoost_interface_model.joblib')
 
 
-scaler = StandardScaler()
+try:
+    model = joblib.load(model_path)
+    print(f"Modelo/Pipeline carregado com sucesso de: {model_path}")
+except FileNotFoundError:
+    print(f"ERRO: O arquivo do modelo não foi encontrado em {model_path}")
+    model = None # Define como None para evitar erros posteriores se o arquivo não existir
+except Exception as e:
+    print(f"ERRO ao carregar o modelo: {e}")
+    model = None
 
 
 arrhythmia_bp = Blueprint('arrhythmia', __name__)
@@ -55,8 +61,10 @@ def evaluate():
     return render_template('evaluate.html')
 
 @arrhythmia_bp.route('/api/predict', methods=['POST'])
-@arrhythmia_bp.route('/api/predict', methods=['POST'])
 def predict():
+    if model is None:
+        return jsonify({'error': 'Modelo não carregado. Verifique os logs do servidor.'}), 500
+        
     try:
         data = request.get_json()
         if not data:
@@ -73,16 +81,14 @@ def predict():
         except Exception as e:
             return jsonify({'error': f'Erro ao converter dados: {str(e)}'}), 400
 
-        # Normaliza os dados
-        input_scaled = scaler.transform(input_vector)
-
-        # Faz a predição
-        prediction = model.predict(input_scaled)[0]
+        # O pipeline (variável 'model') fará todas as transformações (scaler, selectKBest, etc.)
+        # e depois a predição. Não precisa de 'scaler.transform' separado.
+        prediction = model.predict(input_vector)[0]
         prediction = int(prediction)
 
         # Confiança (se houver predict_proba no pipeline)
         if hasattr(model, 'predict_proba'):
-            confidence = float(np.max(model.predict_proba(input_scaled)))
+            confidence = float(np.max(model.predict_proba(input_vector)))
         else:
             confidence = None
 
@@ -98,5 +104,3 @@ def predict():
 
     except Exception as e:
         return jsonify({'error': f'Erro interno do servidor: {str(e)}'}), 500
-
-
